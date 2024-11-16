@@ -1,34 +1,38 @@
-variable "ContainerName" {
-  description = "Value of the name for the Docker container"
-  type        = string
-  default     = "ExampleNginxContainer"
-}
-
-
+# Configure the Azure provider
 terraform {
   required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 3.0.1"
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0.2"
     }
   }
+
+  required_version = ">= 1.1.0"
 }
 
-provider "docker" {
-  host = "npipe:////.//pipe//docker_engine"
+provider "azurerm" {
+  features {}
 }
-
-resource "docker_image" "nginx" {
-  name         = "nginx"
-  keep_locally = false
+variable "storageaccountname" {
+  description = "Value of the name for the storage account"
+  type        = string
+  default     = "storageaccountsiva9999"
 }
-
-resource "docker_container" "nginx" {
-  image = docker_image.nginx.image_id
-  name  = var.ContainerName
-
-  ports {
-    internal = 80
-    external = 8082
-  }
+resource "azurerm_resource_group" "rg" {
+  name     = "myTFResourceGroup3"
+  location = "westus2"
+}
+# Create a virtual network
+resource "azurerm_virtual_network" "vnet" {
+  name                = "myTFVnet2"
+  address_space       = ["10.0.0.0/16"]
+  location            = "westus2"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+resource "azurerm_storage_account" "name" {
+  name = var.storageaccountname
+  location = "westus2"
+  account_replication_type = "LRS"
+  resource_group_name = azurerm_resource_group.rg.name
+  account_tier = "Standard"
 }
